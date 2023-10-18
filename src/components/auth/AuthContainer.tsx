@@ -1,15 +1,20 @@
-import { useState } from "react";
-import { signInWithPopup } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { auth, Providers } from "../../config/firebase";
-import { Button, Typography } from "@mui/material";
-import GoogleIcon from "@mui/icons-material/Google";
-import Center from "../utils/Center";
+import { Button, Input, Typography } from "@mui/material";
+import { Providers, auth } from "../../config/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 
-interface Props {}
+import Center from "../utils/Center";
+import GoogleIcon from "@mui/icons-material/Google";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+interface Props {
+  login: boolean
+}
 
 const AuthContainer = (props: Props) => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [disabled, setDisabled] = useState(false);
 
@@ -18,7 +23,6 @@ const AuthContainer = (props: Props) => {
     signInWithPopup(auth, Providers.google)
       .then(() => {
         setDisabled(false);
-        console.info("TODO: navigate to authenticated screen");
         navigate("/");
       })
       .catch((error) => {
@@ -27,8 +31,48 @@ const AuthContainer = (props: Props) => {
       });
   };
 
+  const signIn = () => {
+    setDisabled(true);
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        setDisabled(false);
+        navigate("/");
+      })
+      .catch((error: any) => {
+        setErrorMessage(error.code + ": " + error.message);
+        setDisabled(false);
+      });
+  }
+
+  const register = () => {
+    setDisabled(true);
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        setDisabled(false);
+        navigate("/");
+      })
+      .catch((error: any) => {
+        setErrorMessage(error.code + ": " + error.message);
+        setDisabled(false);
+      });
+  }
+
   return (
     <Center height={"auto"}>
+      <Input
+        placeholder="Email"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)} />
+      <Input
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)} />
+      <Button size="large" variant="contained" onClick={props.login ? signIn : register}>
+        {props.login ? "Sign In" : "Register"}
+      </Button>
+      <hr />
       <Button
         startIcon={<GoogleIcon />}
         size="large"
